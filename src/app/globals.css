@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @theme {
   /* Primary Colors */
@@ -39,4 +39,24 @@
   /* Basic Text/Background */
   --color-dark: #000000;
   --color-light: #ffffff;
+
+  /* Dashboard Mapping & Other Variables */
+  --color-primary: var(--color-primary-100);
+  --color-primary-light: var(--color-surface-tonal-100);
+  --color-background-light: var(--color-surface-200);
+  --color-background-dark: var(--color-primary-300);
+  --color-neutral-subtle: var(--color-surface-300);
+  --color-text-main: var(--color-primary-300);
+  --color-text-muted: var(--color-info-100);
+
+  --shadow-soft: 0 4px 20px -2px rgba(0, 32, 87, 0.05);
+  --shadow-glow: 0 0 15px rgba(0, 32, 87, 0.1);
+
+  --font-display: var(--font-inter), "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-background-light dark:bg-background-dark font-display text-text-main antialiased selection:bg-primary selection:text-white;
+  }
 }
