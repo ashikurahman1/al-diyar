@@ -11,7 +11,7 @@ interface UserData {
     email: string;
     phone: string;
     password: string;
-    accountType: 'user' | 'agent';
+    role: 'user' | 'agent';
     emailVerified: boolean;
     companyName?: string;
     licenseNumber?: string;
@@ -37,28 +37,28 @@ export async function POST(request: NextRequest) {
             email,
             phone,
             password,
-            accountType,
+            role,
             companyName,
             licenseNumber,
             businessAddress,
             website,
         } = body;
 
-        if (!name || !email || !phone || !password || !accountType) {
+        if (!name || !email || !phone || !password || !role) {
             return NextResponse.json(
                 { error: 'All required fields must be provided' },
                 { status: 400 }
             );
         }
 
-        if (accountType !== 'user' && accountType !== 'agent') {
+        if (role !== 'user' && role !== 'agent') {
             return NextResponse.json(
                 { error: 'Invalid account type' },
                 { status: 400 }
             );
         }
 
-        if (accountType === 'agent') {
+        if (role === 'agent') {
             if (!companyName || !licenseNumber || !businessAddress) {
                 return NextResponse.json(
                     { error: 'Company name, license number, and business address are required for agents' },
@@ -97,11 +97,11 @@ export async function POST(request: NextRequest) {
             email: emailLower,
             phone,
             password: hashedPassword,
-            accountType,
+            role,
             emailVerified: false,
         };
 
-        if (accountType === 'agent') {
+        if (role === 'agent') {
             userData.companyName = companyName;
             userData.licenseNumber = licenseNumber;
             userData.businessAddress = businessAddress;
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
     } catch (error: unknown) {
         console.error('❌ Signup error:', error);
 
-        
+
         if (error instanceof Error && error.name === 'ValidationError') {
             const validationError = error as MongooseError;
             const messages = Object.values(validationError.errors).map((err) => err.message);

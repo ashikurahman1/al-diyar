@@ -21,7 +21,7 @@ type FormData = {
 
 export default function SignUpPage() {
     const router = useRouter();
-    const [accountType, setAccountType] = useState<'user' | 'agent'>('user');
+    const [role, setrole] = useState<'user' | 'agent'>('user');
     const [showOTP, setShowOTP] = useState(false);
     const [userEmail, setUserEmail] = useState('');
     const [apiError, setApiError] = useState('');
@@ -48,7 +48,7 @@ export default function SignUpPage() {
                 },
                 body: JSON.stringify({
                     ...data,
-                    accountType,
+                    role,
                 }),
             });
 
@@ -98,8 +98,8 @@ export default function SignUpPage() {
                         <div className="grid grid-cols-2 gap-3 ">
                             <button
                                 type="button"
-                                onClick={() => setAccountType('user')}
-                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${accountType === 'user'
+                                onClick={() => setrole('user')}
+                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${role === 'user'
                                     ? 'bg-primary-100 text-light shadow-[var(--shadow-glow)]'
                                     : 'bg-surface-tonal-100 text-text-main hover:bg-surface-tonal-200'
                                     }`}
@@ -108,8 +108,8 @@ export default function SignUpPage() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setAccountType('agent')}
-                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${accountType === 'agent'
+                                onClick={() => setrole('agent')}
+                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${role === 'agent'
                                     ? 'bg-primary-100 text-light shadow-[var(--shadow-glow)]'
                                     : 'bg-surface-tonal-100 text-text-main hover:bg-surface-tonal-200'
                                     }`}
@@ -277,7 +277,7 @@ export default function SignUpPage() {
                         </div>
 
                         {/* Agent-Specific Information - Only shown when Agent is selected */}
-                        {accountType === 'agent' && (
+                        {role === 'agent' && (
                             <div className="pt-6 border-t border-surface-tonal-300">
                                 <h3 className="text-lg font-semibold text-text-main mb-4">
                                     Business Information
@@ -295,7 +295,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="companyName"
                                             {...register('companyName', {
-                                                required: accountType === 'agent' ? 'Company name is required for agents' : false,
+                                                required: role === 'agent' ? 'Company name is required for agents' : false,
                                                 minLength: {
                                                     value: 2,
                                                     message: 'Company name must be at least 2 characters',
@@ -324,7 +324,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="licenseNumber"
                                             {...register('licenseNumber', {
-                                                required: accountType === 'agent' ? 'License number is required for agents' : false,
+                                                required: role === 'agent' ? 'License number is required for agents' : false,
                                             })}
                                             className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.licenseNumber ? 'border-danger-300' : 'border-surface-tonal-300'
                                                 }`}
@@ -349,7 +349,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="businessAddress"
                                             {...register('businessAddress', {
-                                                required: accountType === 'agent' ? 'Business address is required for agents' : false,
+                                                required: role === 'agent' ? 'Business address is required for agents' : false,
                                             })}
                                             className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.businessAddress ? 'border-danger-300' : 'border-surface-tonal-300'
                                                 }`}
