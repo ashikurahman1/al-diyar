@@ -7,11 +7,13 @@ export interface IUser extends Document {
     password: string;
     accountType: 'user' | 'agent';
     emailVerified: boolean;
+    provider?: string;
     // Agent-specific fields
     companyName?: string;
     licenseNumber?: string;
     businessAddress?: string;
     website?: string;
+    image?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -34,13 +36,35 @@ const UserSchema: Schema = new Schema(
         },
         phone: {
             type: String,
-            required: [true, 'Phone number is required'],
-            match: [/^(\+?880|0)?1[3-9]\d{8}$/, 'Invalid Bangladesh phone number'],
+            required: [
+                function (this: IUser) {
+                    return !this.provider || this.provider === 'credentials';
+                },
+                'Phone number is required',
+            ],
+            validate: {
+                validator: function (v: string) {
+                    // Skip validation if not provided (for social login)
+                    if (!v && (this as unknown as IUser).provider !== 'credentials') return true;
+                    // Otherwise validate format
+                    return /^(\+?880|0)?1[3-9]\d{8}$/.test(v);
+                },
+                message: 'Invalid Bangladesh phone number',
+            },
         },
         password: {
             type: String,
-            required: [true, 'Password is required'],
+            required: [
+                function (this: IUser) {
+                    return !this.provider || this.provider === 'credentials';
+                },
+                'Password is required',
+            ],
             minlength: [8, 'Password must be at least 8 characters'],
+        },
+        provider: {
+            type: String,
+            default: 'credentials',
         },
         accountType: {
             type: String,
@@ -69,6 +93,10 @@ const UserSchema: Schema = new Schema(
             type: String,
             trim: true,
             match: [/^https?:\/\/.+/, 'Invalid URL format'],
+        },
+        image: {
+            type: String,
+            trim: true,
         },
     },
     {

@@ -17,7 +17,7 @@ export default function SignInPage() {
     const searchParams = useSearchParams();
     const [errorMessage, setErrorMessage] = useState('');
 
-    
+
     const successMessage = useMemo(() => {
         return searchParams.get('verified') === 'true'
             ? 'Email verified successfully! You can now sign in.'
@@ -58,7 +58,10 @@ export default function SignInPage() {
     };
 
     const handleSocialLogin = (provider: string) => {
-        console.log(`${provider} login clicked`);
+        if (provider === 'Google') {
+            signIn('google', { callbackUrl: '/dashboard' });
+        }
+        // Facebook implementation pending
     };
 
     return (

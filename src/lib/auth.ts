@@ -2,7 +2,9 @@ import { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import bcrypt from 'bcryptjs';
 import dbConnect from './mongodb';
-import User from '@/models/User';
+import User, { IUser } from '@/models/User';
+
+import GoogleProvider from 'next-auth/providers/google';
 
 declare module 'next-auth' {
     interface User {
@@ -28,6 +30,10 @@ declare module 'next-auth/jwt' {
 
 export const authOptions: NextAuthOptions = {
     providers: [
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID!,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+        }),
         CredentialsProvider({
             name: 'Credentials',
             credentials: {
@@ -47,9 +53,14 @@ export const authOptions: NextAuthOptions = {
                     throw new Error('Invalid email or password');
                 }
 
-                // Check if email is verified
-                if (!user.emailVerified) {
+                // Check if user verified
+                if (!user.emailVerified && user.provider === 'credentials') {
                     throw new Error('Please verify your email before signing in');
+                }
+
+                // If user registered with Google, they shouldn't use password login
+                if (user.provider === 'google') {
+                    throw new Error('Please login with Google');
                 }
 
                 // Verify password
@@ -71,17 +82,75 @@ export const authOptions: NextAuthOptions = {
     ],
     session: {
         strategy: 'jwt',
-        maxAge: 30 * 24 * 60 * 60, 
+        maxAge: 30 * 24 * 60 * 60,
     },
     pages: {
         signIn: '/auth/signin',
-        error: '/auth/signin', 
+        error: '/auth/signin',
     },
     callbacks: {
-        async jwt({ token, user }) {
+        async signIn({ user, account, profile }) {
+            try {
+                if (account?.provider === 'google') {
+                    const rawEmail = user.email;
+                    if (!rawEmail) {
+                        console.error("Google Sign-In: No email provided");
+                        return false;
+                    }
+
+                    const userEmail: string = rawEmail;
+
+                    await dbConnect();
+
+                    // Check if user exists
+                    const existingUser = await User.findOne({ email: userEmail.toLowerCase() } as Pick<IUser, 'email'>);
+
+                    if (existingUser) {
+                        if (existingUser.provider === 'credentials' && !existingUser.emailVerified) {
+                            existingUser.emailVerified = true;
+                            existingUser.provider = 'google';
+                            
+                            if (user.image) {
+                                existingUser.image = user.image;
+                            }
+                            await existingUser.save();
+                        }
+                        return true;
+                    } else {
+                        console.log("Creating new user from Google profile");
+                        // Create new user from Google profile
+                        await User.create({
+                            name: user.name,
+                            email: userEmail.toLowerCase(),
+                            accountType: 'user', 
+                            emailVerified: true,
+                            provider: 'google',
+                            image: user.image,
+                        } as Partial<IUser>);
+                        return true;
+                    }
+                }
+                return true;
+            } catch (error) {
+                console.error("Google Sign-In Error:", error);
+                return false;
+            }
+        },
+        async jwt({ token, user, account }) {
             if (user) {
                 token.id = user.id;
                 token.accountType = user.accountType;
+            }
+
+            if (token.email) {
+                const email = token.email as string;
+                await dbConnect();
+    
+                const dbUser = await User.findOne({ email } as Pick<IUser, 'email'>);
+                if (dbUser) {
+                    token.id = dbUser._id.toString();
+                    token.accountType = dbUser.accountType;
+                }
             }
             return token;
         },

@@ -75,7 +75,11 @@ export default function SignUpPage() {
     };
 
     const handleSocialLogin = (provider: string) => {
-        console.log(`${provider} login clicked`);
+        if (provider === 'Google') {
+            import('next-auth/react').then(({ signIn }) => {
+                signIn('google', { callbackUrl: '/dashboard' });
+            });
+        }
     };
 
     return (
