@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import OTPVerification from '@/components/OTPVerification';
 
 type FormData = {
     name: string;
@@ -18,7 +20,11 @@ type FormData = {
 };
 
 export default function SignUpPage() {
-    const [accountType, setAccountType] = useState<'user' | 'agent'>('user');
+    const router = useRouter();
+    const [role, setrole] = useState<'user' | 'agent'>('user');
+    const [showOTP, setShowOTP] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const [apiError, setApiError] = useState('');
 
     const {
         register,
@@ -32,11 +38,48 @@ export default function SignUpPage() {
     const password = watch('password');
 
     const onSubmit = async (data: FormData) => {
-        console.log('Form submitted:', { accountType, ...data });
+        setApiError('');
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...data,
+                    role,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setUserEmail(data.email);
+                setShowOTP(true);
+            } else {
+                setApiError(result.error || 'Signup failed. Please try again.');
+            }
+        } catch (error) {
+            setApiError('An error occurred. Please try again.');
+        }
+    };
+
+    const handleOTPVerified = () => {
+        setShowOTP(false);
+        router.push('/auth/signin?verified=true');
+    };
+
+    const handleOTPCancel = () => {
+        setShowOTP(false);
     };
 
     const handleSocialLogin = (provider: string) => {
-        console.log(`${provider} login clicked`);
+        if (provider === 'Google') {
+            import('next-auth/react').then(({ signIn }) => {
+                signIn('google', { callbackUrl: '/dashboard' });
+            });
+        }
     };
 
     return (
@@ -55,8 +98,8 @@ export default function SignUpPage() {
                         <div className="grid grid-cols-2 gap-3 ">
                             <button
                                 type="button"
-                                onClick={() => setAccountType('user')}
-                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${accountType === 'user'
+                                onClick={() => setrole('user')}
+                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${role === 'user'
                                     ? 'bg-primary-100 text-light shadow-[var(--shadow-glow)]'
                                     : 'bg-surface-tonal-100 text-text-main hover:bg-surface-tonal-200'
                                     }`}
@@ -65,8 +108,8 @@ export default function SignUpPage() {
                             </button>
                             <button
                                 type="button"
-                                onClick={() => setAccountType('agent')}
-                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${accountType === 'agent'
+                                onClick={() => setrole('agent')}
+                                className={`py-3 px-4 rounded-xl font-medium transition-all duration-300 cursor-pointer ${role === 'agent'
                                     ? 'bg-primary-100 text-light shadow-[var(--shadow-glow)]'
                                     : 'bg-surface-tonal-100 text-text-main hover:bg-surface-tonal-200'
                                     }`}
@@ -234,7 +277,7 @@ export default function SignUpPage() {
                         </div>
 
                         {/* Agent-Specific Information - Only shown when Agent is selected */}
-                        {accountType === 'agent' && (
+                        {role === 'agent' && (
                             <div className="pt-6 border-t border-surface-tonal-300">
                                 <h3 className="text-lg font-semibold text-text-main mb-4">
                                     Business Information
@@ -252,7 +295,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="companyName"
                                             {...register('companyName', {
-                                                required: accountType === 'agent' ? 'Company name is required for agents' : false,
+                                                required: role === 'agent' ? 'Company name is required for agents' : false,
                                                 minLength: {
                                                     value: 2,
                                                     message: 'Company name must be at least 2 characters',
@@ -281,7 +324,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="licenseNumber"
                                             {...register('licenseNumber', {
-                                                required: accountType === 'agent' ? 'License number is required for agents' : false,
+                                                required: role === 'agent' ? 'License number is required for agents' : false,
                                             })}
                                             className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.licenseNumber ? 'border-danger-300' : 'border-surface-tonal-300'
                                                 }`}
@@ -306,7 +349,7 @@ export default function SignUpPage() {
                                             type="text"
                                             id="businessAddress"
                                             {...register('businessAddress', {
-                                                required: accountType === 'agent' ? 'Business address is required for agents' : false,
+                                                required: role === 'agent' ? 'Business address is required for agents' : false,
                                             })}
                                             className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.businessAddress ? 'border-danger-300' : 'border-surface-tonal-300'
                                                 }`}
@@ -385,6 +428,13 @@ export default function SignUpPage() {
                             </div>
                         </div>
 
+                        {/* API Error Message */}
+                        {apiError && (
+                            <div className="p-4 bg-danger-100 border border-danger-300 rounded-xl">
+                                <p className="text-sm text-danger-300">{apiError}</p>
+                            </div>
+                        )}
+
                         {/* Submit Button */}
                         <button
                             type="submit"
@@ -458,6 +508,15 @@ export default function SignUpPage() {
                         </Link>
                     </p>
                 </div>
+
+                {/* OTP Verification Modal */}
+                {showOTP && (
+                    <OTPVerification
+                        email={userEmail}
+                        onVerify={handleOTPVerified}
+                        onCancel={handleOTPCancel}
+                    />
+                )}
             </div>
         </div>
     );
