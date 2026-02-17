@@ -1,7 +1,10 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { signIn } from 'next-auth/react';
 
 type FormData = {
     email: string;
@@ -10,6 +13,22 @@ type FormData = {
 };
 
 export default function SignInPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
+    const [errorMessage, setErrorMessage] = useState('');
+
+    
+    const successMessage = useMemo(() => {
+        return searchParams.get('verified') === 'true'
+            ? 'Email verified successfully! You can now sign in.'
+            : '';
+    }, [searchParams]);
+
+    const urlError = useMemo(() => {
+        const error = searchParams.get('error');
+        return error ? 'Authentication failed. Please try again.' : '';
+    }, [searchParams]);
+
     const {
         register,
         handleSubmit,
@@ -19,7 +38,23 @@ export default function SignInPage() {
     });
 
     const onSubmit = async (data: FormData) => {
-        console.log('Sign In submitted:', data);
+        setErrorMessage('');
+
+        try {
+            const result = await signIn('credentials', {
+                redirect: false,
+                email: data.email,
+                password: data.password,
+            });
+
+            if (result?.error) {
+                setErrorMessage(result.error);
+            } else if (result?.ok) {
+                router.push('/dashboard');
+            }
+        } catch (error) {
+            setErrorMessage('An error occurred. Please try again.');
+        }
     };
 
     const handleSocialLogin = (provider: string) => {
@@ -36,6 +71,20 @@ export default function SignInPage() {
                 </div>
 
                 <div className="bg-light rounded-2xl p-8 shadow-[var(--shadow-soft)] border border-surface-300">
+                    {/* Success Message */}
+                    {successMessage && (
+                        <div className="mb-4 p-4 bg-green-100 border border-green-300 rounded-xl">
+                            <p className="text-sm text-green-700">{successMessage}</p>
+                        </div>
+                    )}
+
+                    {/* Error Message */}
+                    {(errorMessage || urlError) && (
+                        <div className="mb-4 p-4 bg-danger-100 border border-danger-300 rounded-xl">
+                            <p className="text-sm text-danger-300">{errorMessage || urlError}</p>
+                        </div>
+                    )}
+
                     {/* Form */}
                     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                         {/* Email */}
@@ -57,8 +106,8 @@ export default function SignInPage() {
                                     },
                                 })}
                                 className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.email
-                                        ? 'border-danger-300'
-                                        : 'border-surface-tonal-300'
+                                    ? 'border-danger-300'
+                                    : 'border-surface-tonal-300'
                                     }`}
                                 placeholder="you@example.com"
                             />
@@ -88,8 +137,8 @@ export default function SignInPage() {
                                     },
                                 })}
                                 className={`w-full px-4 py-3 bg-surface-tonal-100 border rounded-xl text-text-main placeholder-text-muted focus:outline-none focus:ring-2 focus:ring-primary-100 focus:border-transparent transition-all duration-300 ${errors.password
-                                        ? 'border-danger-300'
-                                        : 'border-surface-tonal-300'
+                                    ? 'border-danger-300'
+                                    : 'border-surface-tonal-300'
                                     }`}
                                 placeholder="Enter your password"
                             />

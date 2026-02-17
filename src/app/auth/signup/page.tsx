@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import OTPVerification from '@/components/OTPVerification';
 
 type FormData = {
     name: string;
@@ -18,7 +20,11 @@ type FormData = {
 };
 
 export default function SignUpPage() {
+    const router = useRouter();
     const [accountType, setAccountType] = useState<'user' | 'agent'>('user');
+    const [showOTP, setShowOTP] = useState(false);
+    const [userEmail, setUserEmail] = useState('');
+    const [apiError, setApiError] = useState('');
 
     const {
         register,
@@ -32,7 +38,40 @@ export default function SignUpPage() {
     const password = watch('password');
 
     const onSubmit = async (data: FormData) => {
-        console.log('Form submitted:', { accountType, ...data });
+        setApiError('');
+
+        try {
+            const response = await fetch('/api/auth/signup', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    ...data,
+                    accountType,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                setUserEmail(data.email);
+                setShowOTP(true);
+            } else {
+                setApiError(result.error || 'Signup failed. Please try again.');
+            }
+        } catch (error) {
+            setApiError('An error occurred. Please try again.');
+        }
+    };
+
+    const handleOTPVerified = () => {
+        setShowOTP(false);
+        router.push('/auth/signin?verified=true');
+    };
+
+    const handleOTPCancel = () => {
+        setShowOTP(false);
     };
 
     const handleSocialLogin = (provider: string) => {
@@ -385,6 +424,13 @@ export default function SignUpPage() {
                             </div>
                         </div>
 
+                        {/* API Error Message */}
+                        {apiError && (
+                            <div className="p-4 bg-danger-100 border border-danger-300 rounded-xl">
+                                <p className="text-sm text-danger-300">{apiError}</p>
+                            </div>
+                        )}
+
                         {/* Submit Button */}
                         <button
                             type="submit"
@@ -458,6 +504,15 @@ export default function SignUpPage() {
                         </Link>
                     </p>
                 </div>
+
+                {/* OTP Verification Modal */}
+                {showOTP && (
+                    <OTPVerification
+                        email={userEmail}
+                        onVerify={handleOTPVerified}
+                        onCancel={handleOTPCancel}
+                    />
+                )}
             </div>
         </div>
     );
