@@ -5,7 +5,7 @@ export interface IUser extends Document {
     email: string;
     phone: string;
     password: string;
-    accountType: 'user' | 'agent';
+    role: 'user' | 'agent';
     emailVerified: boolean;
     provider?: string;
     // Agent-specific fields
@@ -66,7 +66,7 @@ const UserSchema: Schema = new Schema(
             type: String,
             default: 'credentials',
         },
-        accountType: {
+        role: {
             type: String,
             enum: ['user', 'agent'],
             required: [true, 'Account type is required'],

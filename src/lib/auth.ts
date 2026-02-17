@@ -8,7 +8,7 @@ import GoogleProvider from 'next-auth/providers/google';
 
 declare module 'next-auth' {
     interface User {
-        accountType: 'user' | 'agent';
+        role: 'user' | 'agent';
     }
 
     interface Session {
@@ -16,7 +16,7 @@ declare module 'next-auth' {
             id: string;
             name?: string | null;
             email?: string | null;
-            accountType: 'user' | 'agent';
+            role: 'user' | 'agent';
         };
     }
 }
@@ -24,7 +24,7 @@ declare module 'next-auth' {
 declare module 'next-auth/jwt' {
     interface JWT {
         id: string;
-        accountType: 'user' | 'agent';
+        role: 'user' | 'agent';
     }
 }
 
@@ -75,7 +75,7 @@ export const authOptions: NextAuthOptions = {
                     id: user._id.toString(),
                     email: user.email,
                     name: user.name,
-                    accountType: user.accountType,
+                    role: user.role,
                 };
             },
         }),
@@ -109,7 +109,7 @@ export const authOptions: NextAuthOptions = {
                         if (existingUser.provider === 'credentials' && !existingUser.emailVerified) {
                             existingUser.emailVerified = true;
                             existingUser.provider = 'google';
-                            
+
                             if (user.image) {
                                 existingUser.image = user.image;
                             }
@@ -122,7 +122,7 @@ export const authOptions: NextAuthOptions = {
                         await User.create({
                             name: user.name,
                             email: userEmail.toLowerCase(),
-                            accountType: 'user', 
+                            role: 'user',
                             emailVerified: true,
                             provider: 'google',
                             image: user.image,
@@ -139,17 +139,17 @@ export const authOptions: NextAuthOptions = {
         async jwt({ token, user, account }) {
             if (user) {
                 token.id = user.id;
-                token.accountType = user.accountType;
+                token.role = user.role;
             }
 
             if (token.email) {
                 const email = token.email as string;
                 await dbConnect();
-    
+
                 const dbUser = await User.findOne({ email } as Pick<IUser, 'email'>);
                 if (dbUser) {
                     token.id = dbUser._id.toString();
-                    token.accountType = dbUser.accountType;
+                    token.role = dbUser.role;
                 }
             }
             return token;
@@ -157,7 +157,7 @@ export const authOptions: NextAuthOptions = {
         async session({ session, token }) {
             if (session.user) {
                 session.user.id = token.id;
-                session.user.accountType = token.accountType;
+                session.user.role = token.role;
             }
             return session;
         },
