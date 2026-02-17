@@ -2,7 +2,7 @@ import React from 'react'
 
 function Logo() {
   return (
-    <div>Creating Logo</div>
+    <div>Creating Logo from google</div>
   )
 }
 
