@@ -1,62 +1,125 @@
 @import "tailwindcss";
 
 @theme {
-  /* Primary Colors */
-  --color-primary-100: #002159;
-  --color-primary-200: #061e4f;
-  --color-primary-300: #0a1b45;
+  /* Premium Palette */
+  --color-primary: #1e40af; /* Deep Blue */
+  --color-accent: #3b82f6; /* Electric Blue */
 
-  /* Surface/Background Colors */
-  --color-surface-100: #ffffff;
-  --color-surface-200: #f0f0f0;
-  --color-surface-300: #e1e1e1;
+  --color-background-light: #f8fafc;
+  --color-background-dark: #020617; /* Slate 950 - Premium Dark */
+  --color-surface: #ffffff;
+  --color-surface-dark: #0f172a; /* Slate 900 */
 
-  /* Tonal Surface Colors */
-  --color-surface-tonal-100: #e6e6ed;
-  --color-surface-tonal-200: #dadae0;
-  --color-surface-tonal-300: #ceced4;
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
 
-  /* Success/Green */
-  --color-success-100: #2d6e41;
-  --color-success-200: #43a461;
-  --color-success-300: #70c48a;
+  /* Refined Grays */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+  --color-slate-600: #475569;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a;
 
-  /* Warning/Amber */
-  --color-warning-100: #b5892b;
-  --color-warning-200: #d7ae56;
-  --color-warning-300: #e5cb94;
+  /* Shadows */
+  --shadow-premium: 0 10px 30px -5px rgba(2, 6, 23, 0.05);
+  --shadow-glass: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 
-  /* Danger/Red */
-  --color-danger-100: #631a1a;
-  --color-danger-200: #a02a2a;
-  --color-danger-300: #cf4747;
+  --font-display: "Inter", system-ui, sans-serif;
+}
 
-  /* Info/Blue */
-  --color-info-100: #1a4263;
-  --color-info-200: #2a6aa0;
-  --color-info-300: #4791cf;
+@layer utilities {
+  .glass {
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 0, 0, 0.3);
+  }
 
-  /* Basic Text/Background */
-  --color-dark: #000000;
-  --color-light: #ffffff;
+  .dark .glass {
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
 
-  /* Dashboard Mapping & Other Variables */
-  --color-primary: var(--color-primary-100);
-  --color-primary-light: var(--color-surface-tonal-100);
-  --color-background-light: var(--color-surface-200);
-  --color-background-dark: var(--color-primary-300);
-  --color-neutral-subtle: var(--color-surface-300);
-  --color-text-main: var(--color-primary-300);
-  --color-text-muted: var(--color-info-100);
+  .text-gradient {
+    background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
 
-  --shadow-soft: 0 4px 20px -2px rgba(0, 32, 87, 0.05);
-  --shadow-glow: 0 0 15px rgba(0, 32, 87, 0.1);
+  .animate-reveal {
+    animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
 
-  --font-display: var(--font-inter), "Inter", sans-serif;
+  .animate-slow-zoom {
+    animation: slow-zoom 20s infinite alternate ease-in-out;
+  }
+
+  .animate-bounce-slow {
+    animation: bounce-slow 5s infinite ease-in-out;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse-slow 4s infinite ease-in-out;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes slow-zoom {
+    from {
+      transform: scale(1);
+    }
+    to {
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes bounce-slow {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+
+  @keyframes pulse-slow {
+    0%,
+    100% {
+      opacity: 0.8;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
 }
 
 @layer base {
   body {
-    @apply bg-background-light dark:bg-background-dark font-display text-text-main antialiased selection:bg-primary selection:text-white;
+    @apply bg-background-light dark:bg-background-dark font-display text-slate-800 dark:text-slate-200 antialiased;
+  }
+
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.2); /* accent/20 */
+    color: #3b82f6; /* accent */
   }
 }
